@@ -1,0 +1,225 @@
+/* ========================= GLOBAL RESET & BODY ========================= */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    /* SET SEGOE UI AS THE PRIMARY FONT FOR EVERYTHING */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #D7CCC8; 
+    color: #3E2723;     
+}
+
+/* Ensure headings and UI elements use the same font stack */
+h1, h2, h3, nav a, button, label, .status-badge {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ========================= GLOBAL LINKS ========================= */
+a {
+    color: #5D4037;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #3E2723;
+}
+/* ========================= NAVIGATION BAR ========================= */
+nav {
+    background-color: #3E2723; /* Dark Espresso Brown */
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+nav a {
+    color: #F5F5F5;
+    text-decoration: none;
+    background-color: #5D4037; /* Warm Mocha */
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    background-color: #8D6E63; /* Lighter Muted Brown Accent */
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* ========================= HEADINGS ========================= */
+h1, h2, h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #3E2723; /* Deep Espresso */
+}
+
+/* ========================= HERO / MAIN SECTION ========================= */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+    background: #EFEBE9; /* Soft Cream/Tan */
+    margin: 30px auto;
+    max-width: 900px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    border: 1px solid #BCAAA4;
+}
+
+.hero h1 {
+    font-size: 42px;
+    color: #5D4037;
+}
+
+.hero h2 {
+    color: #8D6E63;
+}
+
+.hero p {
+    max-width: 700px;
+    margin: auto;
+    line-height: 1.6;
+    color: #4E342E;
+    font-weight: 500;
+}
+
+/* ========================= CARDS (HOME / DASHBOARD) ========================= */
+.info-cards {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    padding: 40px 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #EFEBE9; /* Soft Cream */
+    padding: 25px;
+    width: 260px;
+    border-radius: 12px;
+    text-align: center;
+    color: #3E2723;
+    border: 1px solid #D7CCC8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    background-color: #D7CCC8; /* Darker Tan on Hover */
+    border-color: #8D6E63;
+}
+
+/* ========================= CONTAINERS / BOXES ========================= */
+.container,
+.dashboard-box,
+.profile-box,
+.form-box {
+    max-width: 1000px;
+    background-color: #ffffff;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* ========================= FORMS ========================= */
+label {
+    display: block;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #5D4037; /* Mocha Labels */
+    font-weight: 600;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #BCAAA4; /* Muted Clay Border */
+    font-size: 14px;
+    background-color: #FAFAFA;
+}
+
+input:focus,
+textarea:focus {
+    border-color: #5D4037;
+    box-shadow: 0 0 6px rgba(93, 64, 55, 0.2);
+    outline: none;
+}
+
+/* ========================= BUTTONS ========================= */
+button {
+    margin-top: 25px;
+    width: 100%;
+    padding: 14px;
+    background-color: #5D4037; /* Warm Mocha */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #3E2723; /* Dark Espresso Hover */
+    transform: translateY(-1px);
+}
+
+/* ========================= MESSAGES ========================= */
+.success-msg {
+    background-color: #D7CCC8;
+    color: #3E2723;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px auto;
+    font-weight: bold;
+    border-left: 5px solid #5D4037;
+}
+
+/* ========================= TABLES (ALL PAGES) ========================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #D7CCC8;
+    margin-top: 20px;
+}
+
+table thead th {
+    background-color: #5D4037; /* Mocha Header */
+    color: #ffffff;
+    padding: 12px;
+}
+
+table tbody td {
+    padding: 10px;
+    border: 1px solid #EFEBE9;
+}
+
+table tbody tr:hover {
+    background-color: #F5F5F2; /* Very Light Beige Hover */
+}
+
+/* ========================= REVIEWS ========================= */
+.review {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #8D6E63; /* Lighter Brown Accent */
+    background-color: #FDFBFA;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.review h3 {
+    color: #5D4037;
+    text-align: left;
+}
