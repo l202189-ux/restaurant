@@ -10,11 +10,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'rider') {
 $rider_id = (int)$_SESSION['user_id'];
 
 /* --- CHECK FOR CURRENT ACTIVE ORDER --- */
-// Logic: An order is active if it's 'In Progress'
+// Logic: An order is active if it's 'OutForDelivery'
 $active_res = $conn->query("
     SELECT order_id FROM Orders 
     WHERE rider_id = $rider_id 
-    AND order_status = 'Pending' 
+    AND order_status = 'OutForDelivery' 
     LIMIT 1
 ");
 $has_active = ($active_res && $active_res->num_rows > 0);
