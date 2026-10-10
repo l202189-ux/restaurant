@@ -61,6 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_handshake']) &
 }
 
 $items_res = $conn->query("SELECT oi.quantity, d.dish_name FROM OrderItems oi JOIN Dishes d ON oi.dish_id = d.dish_id WHERE oi.order_id = $order_id");
+$delivery_res = $conn->query("SELECT u.full_name, ca.address_text, ca.city
+    FROM Orders o JOIN Users u ON o.customer_id=u.user_id
+    JOIN customeraddresses ca ON o.address_id=ca.address_id
+    WHERE o.order_id=$order_id");
+$delivery = $delivery_res->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,6 +88,8 @@ $items_res = $conn->query("SELECT oi.quantity, d.dish_name FROM OrderItems oi JO
     <div class="card">
         <h2>Order #<?= $order_id ?></h2>
         <p>Status: <strong><?= $order['order_status'] ?></strong></p>
+        <p><strong>Customer:</strong> <?= htmlspecialchars($delivery['full_name']) ?></p>
+        <p><strong>Address:</strong> <?= htmlspecialchars($delivery['address_text'] . ', ' . $delivery['city']) ?></p>
 
         <?php if (isset($error)): ?>
             <div class="error-msg"><?= $error ?></div>
