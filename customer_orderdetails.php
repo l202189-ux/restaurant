@@ -34,31 +34,6 @@ if (!$result_order || $result_order->num_rows === 0) {
 
 $order = $result_order->fetch_assoc();
 
-/* ============================= CUSTOMER CONFIRM DELIVERY ============================= */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['customer_code_input'])) {
-    if ((int)$order['rider_code_verified'] !== 1) {
-        $error = "Rider has not confirmed delivery yet.";
-    } elseif ($_POST['customer_code_input'] == $order['customer_code']) {
-        $conn->query("UPDATE Orders SET customer_code_verified = 1 WHERE order_id = $order_id");
-        $success = "Delivery confirmed successfully.";
-        // Refresh order
-        $result_order = $conn->query($sql_order);
-        $order = $result_order->fetch_assoc();
-    } else {
-        $error = "Incorrect delivery code.";
-    }
-}
-
-/* ============================= AUTO MARK AS DELIVERED ============================= */
-if (
-    (int)$order['rider_code_verified'] === 1 &&
-    (int)$order['customer_code_verified'] === 1 &&
-    $order['order_status'] !== 'Delivered'
-) {
-    $conn->query("UPDATE Orders SET order_status = 'Delivered', delivery_timestamp = NOW() WHERE order_id = $order_id");
-    $order['order_status'] = 'Delivered';
-}
-
 /* ============================= FETCH ORDER ITEMS ============================= */
 $sql_items = "
 SELECT oi.quantity, oi.unit_price, oi.discount_applied, oi.line_total, d.dish_name
@@ -106,25 +81,13 @@ while ($item = $result_items->fetch_assoc()) {
     <?php endif; ?>
     <p><strong>Delivery Address:</strong> <?= htmlspecialchars($order['address_text'] . ', ' . $order['city']) ?></p>
 
-    <!-- ============================= DELIVERY CODE + CONFIRMATION ============================= -->
-    <?php if (!empty($order['customer_code'])): ?>
+    <?php if (!empty($order['customer_verify_code']) && $order['order_status'] !== 'Delivered'): ?>
         <div style="text-align:center; margin:25px 0; padding:20px; border:2px dashed #000;">
             <p><strong>Your Delivery Code</strong></p>
             <p style="font-size:36px; font-weight:bold; letter-spacing:6px;">
-                <?= htmlspecialchars($order['customer_code']) ?>
+                <?= htmlspecialchars($order['customer_verify_code']) ?>
             </p>
-            <?php if ((int)$order['customer_code_verified'] === 1): ?>
-                <p style="color:green; font-weight:bold;">Delivery confirmed successfully</p>
-            <?php elseif ((int)$order['rider_code_verified'] === 1): ?>
-                <p style="font-size:13px; color:gray;">After receiving your order, enter the code below to confirm delivery.</p>
-                <form method="POST" style="margin-top:15px;">
-                    <input type="text" name="customer_code_input" placeholder="Enter delivery code" required style="padding:8px; text-align:center;">
-                    <br><br>
-                    <button type="submit">Confirm Delivery</button>
-                </form>
-            <?php else: ?>
-                <p style="font-size:13px; color:gray;">Waiting for rider to confirm delivery.</p>
-            <?php endif; ?>
+            <p>Give this code to the rider when you receive your order.</p>
         </div>
     <?php endif; ?>
 
