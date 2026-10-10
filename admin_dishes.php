@@ -109,12 +109,34 @@ if(isset($_POST['edit_dish'])){
     $price = $_POST['price'];
     $availability = $_POST['availability'];
 
+    if ($dish_name === '' || $description === '' || !is_numeric($price) || $price <= 0) {
+        $error_msg = "Please enter valid dish information.";
+    } else {
+        // Existing image is kept unless a new one is uploaded
+        $image = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $image = uniqid("dish_") . "." . $ext;
+                move_uploaded_file($_FILES['image']['tmp_name'], "images/" . $image);
+            } else {
+                $error_msg = "Please choose a JPG, PNG or WebP image.";
+            }
+        }
+        if (!$error_msg) {
+            if ($image !== null) {
+                $stmt = $conn->prepare("UPDATE Dishes SET dish_name=?, description=?, price=?, availability=?, image_path=? WHERE dish_id=?");
+                $stmt->bind_param("ssdssi", $dish_name, $description, $price, $availability, $image, $id);
+            } else {
     $stmt = $conn->prepare("UPDATE Dishes SET dish_name=?, description=?, price=?, availability=? WHERE dish_id=?");
     $stmt->bind_param("ssdsi", $dish_name, $description, $price, $availability, $id);
     if($stmt->execute()){
         $_SESSION['success_flash'] = "Dish updated successfully.";
         header("Location: admin_dishes.php");
         exit();
+    }
+            }
+        }
     }
 }
 
@@ -126,6 +148,14 @@ if(isset($_POST['apply_discount'])){
     $discount_type = $_POST['discount_type'];
     $discount_value = $_POST['discount_value'];
 
+    $dish_check = $conn->query("SELECT price FROM Dishes WHERE dish_id=$dish_id");
+    $dish_row = $dish_check ? $dish_check->fetch_assoc() : null;
+    if (!$dish_row || !is_numeric($discount_value) || $discount_value < 0 ||
+        !in_array($discount_type, ['percentage', 'flat']) ||
+        ($discount_type == 'percentage' && $discount_value > 100) ||
+        ($discount_type == 'flat' && $discount_value > $dish_row['price'])) {
+        $error_msg = "Please enter a valid discount value.";
+    } else {
     $res = $conn->query("SELECT * FROM Discounts WHERE dish_id=$dish_id");
     if($res->num_rows > 0){
         $stmt = $conn->prepare("UPDATE Discounts SET discount_type=?, discount_value=? WHERE dish_id=?");
@@ -138,6 +168,7 @@ if(isset($_POST['apply_discount'])){
         $_SESSION['success_flash'] = "Discount applied successfully.";
         header("Location: admin_dishes.php");
         exit();
+    }
     }
 }
 
@@ -236,13 +267,14 @@ $dishes = $conn->query("SELECT d.*, dis.discount_type, dis.discount_value FROM D
         <tbody>
             <?php while($dish = $dishes->fetch_assoc()): ?>
             <tr>
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="dish_id" value="<?= $dish['dish_id'] ?>">
                     <td style="width: 150px;">
                         <?php if($dish['image_path']): ?>
                             <img src="images/<?= $dish['image_path'] ?>" style="width:100px; height:70px; object-fit:cover; border-radius:5px; display:block; margin-bottom:5px;">
                         <?php endif; ?>
                         <input type="text" name="dish_name" value="<?= htmlspecialchars($dish['dish_name']) ?>">
+                        <label>Change Image:</label><input type="file" name="image" accept=".jpg,.jpeg,.png,.webp">
                     </td>
                     <td>
                         <textarea name="description" style="height: 60px;"><?= htmlspecialchars($dish['description']) ?></textarea>
