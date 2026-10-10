@@ -22,13 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quantity'])) {
     $grand_total = 0;
 
     foreach ($quantities as $dish_id => $qty) {
-        if ($qty > 0) {
+        if (!ctype_digit((string)$qty)) continue;
+        $qty = (int)$qty;
+        if ($qty > 0 && $qty <= 100) {
             $dish_id = (int)$dish_id;
             $res = $conn->query("
                 SELECT d.dish_name, d.price, dis.discount_type, dis.discount_value 
                 FROM Dishes d 
                 LEFT JOIN Discounts dis ON d.dish_id = dis.dish_id 
-                WHERE d.dish_id = $dish_id
+                WHERE d.dish_id = $dish_id AND d.availability = 'available'
             ");
             
             if ($row = $res->fetch_assoc()) {
