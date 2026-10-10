@@ -21,7 +21,7 @@ $orders_res = $conn->query("
     FROM orders o
     JOIN Users u ON o.customer_id = u.user_id
     JOIN customeraddresses a ON o.address_id = a.address_id
-    WHERE o.order_status='Pending' OR (o.rider_id=$rider_id AND o.order_status='In Progress')
+    WHERE (o.order_status='Pending' AND o.rider_id IS NULL) OR (o.rider_id=$rider_id AND o.order_status='OutForDelivery')
     ORDER BY o.order_timestamp DESC
 ");
 ?>
@@ -207,7 +207,7 @@ $orders_res = $conn->query("
                 <td>
                     <?php if($order['order_status'] == 'Pending'): ?>
                         <a href="rider_updatestatus.php?order_id=<?= $order['order_id'] ?>" class="view-link">Claim Order</a>
-                    <?php elseif($order['order_status'] == 'In Progress'): ?>
+                    <?php elseif($order['order_status'] == 'OutForDelivery'): ?>
                         <a href="rider_updatestatus.php?order_id=<?= $order['order_id'] ?>" class="view-link">Update Status</a>
                     <?php endif; ?>
                 </td>
