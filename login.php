@@ -50,13 +50,65 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     <meta charset="UTF-8"> 
     <title>Login</title> 
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Login error pop-up */
+        .login-error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(62, 39, 35, 0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-error-popup {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-error-popup h2 {
+            color: #3E2723;
+            margin-top: 10px;
+        }
+
+        .login-error-popup p {
+            color: #5D4037;
+            margin: 15px 0 20px;
+        }
+
+        .login-error-icon {
+            background: #D7CCC8;
+            color: #3E2723;
+            width: 45px;
+            height: 45px;
+            line-height: 45px;
+            border-radius: 50%;
+            margin: 0 auto;
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .login-error-popup button {
+            margin-top: 5px;
+        }
+    </style>
 </head> 
 <body> 
 
 <div class="profile-box" style="max-width:400px; margin:50px auto;">
     <h1>Login</h1>
 
-    <?php if(isset($error_msg)) echo "<div class='error'>$error_msg</div>"; ?>
+
 
     <form action="#" method="POST"> 
         <label>Email</label> 
@@ -72,6 +124,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         Don't have an account? <a href="signup.php">Sign up here</a>
     </p>
 </div>
+
+
+<?php if(isset($error_msg)): ?>
+    <div class="login-error-overlay" id="login-error-popup">
+        <div class="login-error-popup" role="alertdialog" aria-modal="true" aria-labelledby="login-error-title">
+            <div class="login-error-icon">!</div>
+            <h2 id="login-error-title">Login Failed</h2>
+            <p><?= htmlspecialchars($error_msg) ?></p>
+            <button type="button" onclick="document.getElementById('login-error-popup').style.display='none';">Try Again</button>
+        </div>
+    </div>
+<?php endif; ?>
 
 </body> 
 </html>
