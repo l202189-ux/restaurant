@@ -27,34 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         WHERE user_id=$user_id
     ");
 
-    // Customer address handling
+    // Customers can save several addresses
     if ($role === 'customer') {
-        $label = mysqli_real_escape_string($conn, $_POST['address_label']);
-        $text  = mysqli_real_escape_string($conn, $_POST['address_text']);
-        $city  = mysqli_real_escape_string($conn, $_POST['city']);
+        $label = mysqli_real_escape_string($conn, $_POST['address_label'] ?? '');
+        $text = mysqli_real_escape_string($conn, $_POST['address_text'] ?? '');
+        $city = mysqli_real_escape_string($conn, $_POST['city'] ?? '');
+        $address_id = (int)($_POST['address_id'] ?? 0);
 
-        $check = $conn->query("
-            SELECT address_id
-            FROM customeraddresses
-            WHERE customer_id=$user_id
-        ");
-
-        if ($check->num_rows > 0) {
-            // Update existing address
-            $conn->query("
-                UPDATE customeraddresses
-                SET address_label='$label',
-                    address_text='$text',
-                    city='$city'
-                WHERE customer_id=$user_id
-            ");
-        } else {
-            // Insert new address
-            $conn->query("
-                INSERT INTO customeraddresses
-                (customer_id, address_label, address_text, city)
-                VALUES ($user_id, '$label', '$text', '$city')
-            ");
+        if ($text !== '' && $city !== '') {
+            if (isset($_POST['add_address']) || $address_id == 0) {
+                $conn->query("INSERT INTO customeraddresses (customer_id, address_label, address_text, city) VALUES ($user_id, '$label', '$text', '$city')");
+            } else {
+                $conn->query("UPDATE customeraddresses SET address_label='$label', address_text='$text', city='$city' WHERE address_id=$address_id AND customer_id=$user_id");
+            }
         }
     }
 
@@ -187,6 +172,20 @@ if ($result && $result->num_rows > 0) {
 
         <?php if ($role === 'customer'): ?>
             <h3>Delivery Address</h3>
+            <label>Saved Addresses</label>
+            <select name="address_id" id="address_id" onchange="chooseAddress()" style="padding:10px; width:100%;">
+                <option value="0">New address</option>
+                <?php
+                $saved = $conn->query("SELECT * FROM customeraddresses WHERE customer_id=$user_id ORDER BY address_id");
+                while ($addr = $saved->fetch_assoc()): ?>
+                    <option value="<?= $addr['address_id'] ?>"
+                        data-label="<?= htmlspecialchars($addr['address_label'], ENT_QUOTES) ?>"
+                        data-address="<?= htmlspecialchars($addr['address_text'], ENT_QUOTES) ?>"
+                        data-city="<?= htmlspecialchars($addr['city'], ENT_QUOTES) ?>">
+                        <?= htmlspecialchars($addr['address_label'] ?: 'Address') ?> - <?= htmlspecialchars($addr['city']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
 
             <label>Address Label</label>
             <input type="text" name="address_label"
@@ -196,11 +195,11 @@ if ($result && $result->num_rows > 0) {
             <label>Street Address</label>
             <input type="text" name="address_text"
                    value="<?= htmlspecialchars($address_text) ?>"
-                   placeholder="Street, area, house no." required>
+                   placeholder="Street, area, house no." id="address_text" required>
 
             <label>City</label>
             <input type="text" name="city"
-                   value="<?= htmlspecialchars($city) ?>" required>
+                   value="<?= htmlspecialchars($city) ?>" id="city" required>
         <?php endif; ?>
 
         <?php if ($role === 'rider'): ?>
@@ -209,8 +208,23 @@ if ($result && $result->num_rows > 0) {
         <?php endif; ?>
 
         <button type="submit">Save Changes</button>
+        <?php if ($role === 'customer'): ?>
+            <button type="submit" name="add_address" value="1">Save as New Address</button>
+        <?php endif; ?>
     </form>
 </div>
 
+<script>
+function chooseAddress() {
+    const selected = document.getElementById('address_id').selectedOptions[0];
+    document.getElementById('address_label').value = selected.dataset.label || '';
+    document.getElementById('address_text').value = selected.dataset.address || '';
+    document.getElementById('city').value = selected.dataset.city || '';
+}
+<?php if ($role === 'customer'): ?>
+document.getElementById('address_id').value = "<?= (int)($conn->query("SELECT address_id FROM customeraddresses WHERE customer_id=$user_id ORDER BY address_id LIMIT 1")->fetch_assoc()['address_id'] ?? 0) ?>";
+chooseAddress();
+<?php endif; ?>
+</script>
 </body>
 </html>
