@@ -118,7 +118,7 @@ $result = $conn->query($sql);
                            Checks if status is 'Pending' OR 'In Progress' 
                            to ensure code is visible immediately.
                         */
-                        if (($order['order_status'] === 'Pending' || $order['order_status'] === 'In Progress') && (int)$order['customer_verify_code'] > 0): 
+                        if (($order['order_status'] === 'Pending' || $order['order_status'] === 'OutForDelivery') && (int)$order['customer_verify_code'] > 0): 
                         ?>
                             <div class="delivery-code-badge">
                                 <?= $order['customer_verify_code'] ?>
