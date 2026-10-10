@@ -15,17 +15,22 @@ if (!isset($_GET['order_id']) || !is_numeric($_GET['order_id'])) {
 $order_id = (int)$_GET['order_id'];
 
 /* --- CLAIM ORDER LOGIC --- */
-$check_claim = $conn->query("SELECT rider_id FROM Orders WHERE order_id = $order_id");
-$claim_data = $check_claim->fetch_assoc();
+$check_claim = $conn->query("SELECT rider_id, order_status FROM Orders WHERE order_id = $order_id");
+$claim_data = $check_claim ? $check_claim->fetch_assoc() : null;
+if (!$claim_data) die("Order not found.");
 
-if ($claim_data['rider_id'] === NULL) {
+if ($claim_data['rider_id'] === NULL && $claim_data['order_status'] === 'Pending') {
+    $busy = $conn->query("SELECT order_id FROM Orders WHERE rider_id=$rider_id AND order_status='OutForDelivery' LIMIT 1");
+    if ($busy && $busy->num_rows > 0) die("Please complete your current delivery first.");
+
     $rider_code = rand(1000, 9999);
     $customer_code = rand(1000, 9999);
 
-    $stmt = $conn->prepare("UPDATE Orders SET rider_id = ?, order_status = 'Pending', rider_verify_code = ?, customer_verify_code = ?, rider_code_verified = 0, customer_code_verified = 0 WHERE order_id = ?");
+    // Only one rider can claim a pending order
+    $stmt = $conn->prepare("UPDATE Orders SET rider_id=?, order_status='OutForDelivery', rider_verify_code=?, customer_verify_code=?, rider_code_verified=0, customer_code_verified=0 WHERE order_id=? AND rider_id IS NULL AND order_status='Pending'");
     $stmt->bind_param("iiii", $rider_id, $rider_code, $customer_code, $order_id);
     $stmt->execute();
-
+    if ($stmt->affected_rows != 1) die("This order was already accepted.");
     header("Location: rider_updatestatus.php?order_id=$order_id");
     exit();
 }
@@ -39,7 +44,7 @@ if ((int)$order['rider_id'] !== $rider_id) {
 }
 
 /* --- VERIFICATION LOGIC --- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_handshake'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_handshake']) && $order['order_status'] === 'OutForDelivery') {
     $input_rider = trim($_POST['rider_code_input']);
     $input_customer = trim($_POST['customer_code_input']);
 
