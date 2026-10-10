@@ -127,6 +127,11 @@ if(isset($_POST['edit_dish'])){
             if ($image !== null) {
                 $stmt = $conn->prepare("UPDATE Dishes SET dish_name=?, description=?, price=?, availability=?, image_path=? WHERE dish_id=?");
                 $stmt->bind_param("ssdssi", $dish_name, $description, $price, $availability, $image, $id);
+                if ($stmt->execute()) {
+                    $_SESSION['success_flash'] = "Dish updated successfully.";
+                    header("Location: admin_dishes.php");
+                    exit();
+                }
             } else {
     $stmt = $conn->prepare("UPDATE Dishes SET dish_name=?, description=?, price=?, availability=? WHERE dish_id=?");
     $stmt->bind_param("ssdsi", $dish_name, $description, $price, $availability, $id);
