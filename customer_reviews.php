@@ -2,41 +2,54 @@
 session_start();
 include 'db.php';
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'customer') {
     header("Location: login.php");
     exit();
 }
-
 $customer_id = (int)$_SESSION['user_id'];
-$order_id = (int)$_GET['order_id'];
+$order_id = (int)($_GET['order_id'] ?? 0);
 $submitted = false;
+$error = "";
 
-/* --- FETCH ITEMS --- */
-$query = "
-    SELECT oi.dish_id, d.dish_name 
-    FROM OrderItems oi
-    JOIN Dishes d ON oi.dish_id = d.dish_id
-    WHERE oi.order_id = $order_id
-";
-$items_res = $conn->query($query);
+$check = $conn->query("SELECT order_status FROM Orders WHERE order_id=$order_id AND customer_id=$customer_id");
+$order = $check ? $check->fetch_assoc() : null;
+if (!$order || $order['order_status'] != 'Delivered') die("Reviews are only available for your delivered orders.");
 
-/* --- HANDLE SUBMISSION --- */
+$old = $conn->query("SELECT review_id FROM Reviews WHERE order_id=$order_id AND customer_id=$customer_id LIMIT 1");
+if ($old && $old->num_rows > 0) die("You have already reviewed this order.");
+
+$items_res = $conn->query("SELECT oi.dish_id, d.dish_name FROM OrderItems oi JOIN Dishes d ON oi.dish_id=d.dish_id WHERE oi.order_id=$order_id");
+$valid_dishes = [];
+while ($item = $items_res->fetch_assoc()) $valid_dishes[] = (int)$item['dish_id'];
+$items_res->data_seek(0);
+
 if (isset($_POST['submit_all_reviews'])) {
-    foreach ($_POST['reviews'] as $dish_id => $data) {
-        $rating = (int)$data['rating'];
-        $review_text = trim($conn->real_escape_string($data['text']));
-
-        if (!empty($review_text)) {
-            $sql_dish_id = ($dish_id == 0) ? "NULL" : (int)$dish_id;
-            $insert_query = "INSERT INTO Reviews (order_id, customer_id, dish_id, rating, review_text, review_date) 
-                             VALUES ($order_id, $customer_id, $sql_dish_id, $rating, '$review_text', NOW())";
-            $conn->query($insert_query);
+    $reviews = [];
+    foreach (($_POST['reviews'] ?? []) as $dish_id => $data) {
+        $dish_id = (int)$dish_id;
+        $rating = (int)($data['rating'] ?? 0);
+        $review_text = trim($data['text'] ?? '');
+        if ($review_text === '') continue;
+        if (($dish_id != 0 && !in_array($dish_id, $valid_dishes)) || $rating < 1 || $rating > 5) {
+            $error = "Invalid dish or star rating.";
+            break;
         }
+        $reviews[] = [$dish_id, $rating, $review_text];
     }
-    $submitted = true;
+    if (!$error && count($reviews) == 0) $error = "Please enter a review.";
+    if (!$error) {
+        $stmt = $conn->prepare("INSERT INTO Reviews (order_id, customer_id, dish_id, rating, review_text) VALUES (?, ?, ?, ?, ?)");
+        foreach ($reviews as $review) {
+            $dish_id = $review[0] == 0 ? null : $review[0];
+            $rating = $review[1];
+            $review_text = $review[2];
+            $stmt->bind_param("iiiis", $order_id, $customer_id, $dish_id, $rating, $review_text);
+            $stmt->execute();
+        }
+        $submitted = true;
+    }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -159,6 +172,7 @@ if (isset($_POST['submit_all_reviews'])) {
 </nav>
 
 <div class="review-container">
+    <?php if ($error): ?><p style="color:red; text-align:center;"><?= htmlspecialchars($error) ?></p><?php endif; ?>
     
     <?php if ($submitted): ?>
         <div class="success-banner">
