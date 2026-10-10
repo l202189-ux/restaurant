@@ -23,6 +23,29 @@ if(!isset($_SESSION['role']) || $_SESSION['role'] != 'admin'){
 $error_msg = "";
 $csv_error_msg = "";
 
+// Check CSV rows before the import starts
+if (isset($_POST['upload_csv']) && isset($_FILES['csv_file']) && $_FILES['csv_file']['size'] > 0) {
+    $csv_name = $_FILES['csv_file']['name'];
+    if (strtolower(pathinfo($csv_name, PATHINFO_EXTENSION)) != 'csv') {
+        die("Please select a CSV file.");
+    }
+    $check_file = fopen($_FILES['csv_file']['tmp_name'], "r");
+    $header = fgetcsv($check_file);
+    $row_count = 0;
+    $csv_valid = ($header && count($header) == 5);
+    while ($csv_valid && ($row = fgetcsv($check_file)) !== false) {
+        if (count($row) != 5 || trim($row[0]) === '' || !is_numeric($row[1]) ||
+            $row[1] <= 0 || !in_array(trim($row[4]), ['available', 'unavailable'])) {
+            $csv_valid = false;
+        }
+        $row_count++;
+    }
+    fclose($check_file);
+    if (!$csv_valid || $row_count == 0) {
+        die("Invalid CSV data. Please use the downloaded template and fill in all required fields.");
+    }
+}
+
 // Handles CSV upload matching DB columns
 if(isset($_POST['upload_csv'])){
     if(isset($_FILES['csv_file']) && $_FILES['csv_file']['size'] > 0){
